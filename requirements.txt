@@ -2,7 +2,9 @@ fastapi
 uvicorn
 sqlalchemy
 pymysql
+cryptography
 pandas
 openpyxl
 python-dotenv
 alembic
+streamlit

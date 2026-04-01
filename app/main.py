@@ -1,7 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import case, cast, Integer
 import pandas as pd
 from io import BytesIO
 import math
@@ -16,6 +15,7 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+# sqlalchemy.url = mysql+pymysql://root:chandana%%402004@localhost:3306/excel_dbt
 
 def get_db():
     db = SessionLocal()
@@ -227,15 +227,8 @@ def _loaner_sort_key(loaner_id):
 
 @app.get("/loaners")
 def list_loaners(db: Session = Depends(get_db)):
-    numeric_first = case(
-        (Loaner.loaner_id.op("REGEXP")(r"^[0-9]+$"), 0),
-        else_=1,
-    )
-    rows = (
-        db.query(Loaner)
-        .order_by(numeric_first, cast(Loaner.loaner_id, Integer), Loaner.loaner_id)
-        .all()
-    )
+    rows = db.query(Loaner).all()
+    rows = sorted(rows, key=lambda r: _loaner_sort_key(r.loaner_id))
     return {
         "count": len(rows),
         "data": [
@@ -300,15 +293,8 @@ async def upload_excel(file: UploadFile = File(...), db: Session = Depends(get_d
 
         db.commit()
 
-        numeric_first = case(
-            (Loaner.loaner_id.op("REGEXP")(r"^[0-9]+$"), 0),
-            else_=1,
-        )
-        ordered_rows = (
-            db.query(Loaner)
-            .order_by(numeric_first, cast(Loaner.loaner_id, Integer), Loaner.loaner_id)
-            .all()
-        )
+        ordered_rows = db.query(Loaner).all()
+        ordered_rows = sorted(ordered_rows, key=lambda r: _loaner_sort_key(r.loaner_id))
 
         return {
             "status": "success",

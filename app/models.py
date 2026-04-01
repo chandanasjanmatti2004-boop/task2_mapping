@@ -11,3 +11,4 @@ class Loaner(Base):
     total_amount = Column(Float)
     total_land = Column(String(50))
     descrition = Column(String(500))
+    
